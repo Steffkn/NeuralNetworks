@@ -1,0 +1,6 @@
+﻿namespace Brain
+{
+    class Layer
+    {
+    }
+}
