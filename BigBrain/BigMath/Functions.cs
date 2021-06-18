@@ -5,23 +5,8 @@ using System.Text;
 
 namespace BigMath
 {
-    public static class ActivationFunctions
+    public static class Functions
     {
-        public static float Sigmoid(float x)
-        {
-            return 1.0f / (1.0f + (float)Math.Exp(-x));
-        }
-
-        public static float TanH(float x)
-        {
-            return (float)Math.Tanh(x);
-        }
-
-        public static float HeavisideStep(float x)
-        {
-            return x < 0.0f ? 0.0f : 1.0f;
-        }
-
         public static float[] SoftMax(float[] inputs)
         {
             float[] result = new float[inputs.Length];
@@ -34,6 +19,21 @@ namespace BigMath
             }
 
             return result;
+        }
+
+        public static bool XOR(bool a, bool b)
+        {
+            return a ^ b;
+        }
+
+        public static bool OR(bool a, bool b)
+        {
+            return a || b;
+        }
+
+        public static bool AND(bool a, bool b)
+        {
+            return a && b;
         }
     }
 }

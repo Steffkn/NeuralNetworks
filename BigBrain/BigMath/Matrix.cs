@@ -25,7 +25,7 @@ namespace BigMath
         public Matrix(float[] values_array)
             : this(values_array.Length, 1)
         {
-            this.SetRow(values_array, 0);
+            this.SetCol(values_array, 0);
         }
 
         public Matrix(Matrix other)
@@ -160,13 +160,13 @@ namespace BigMath
             return this.Rows == other.Cols;
         }
 
-        public void Randomize(Random random)
+        public void Randomize(Random random, int minValie = 0, int maxValue = 10)
         {
             for (int i = 0; i < this.Rows; i++)
             {
                 for (int j = 0; j < this.Cols; j++)
                 {
-                    this.values[i, j] = random.Next(-10, 10) / 10f;
+                    this.values[i, j] = (random.Next(minValie, maxValue) / 10f) + 0.1f;
                 }
             }
         }
@@ -253,8 +253,7 @@ namespace BigMath
 
         public static Matrix operator *(Matrix matrixA, Matrix matrixB)
         {
-            Matrix result = new Matrix(matrixA);
-            return result.Multiply(matrixB);
+            return matrixA.Multiply(matrixB);
         }
 
         /// <summary>
