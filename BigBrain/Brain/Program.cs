@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Brain
 {
@@ -10,22 +11,33 @@ namespace Brain
         static List<Tuple<float[], float[]>> trainingData = new List<Tuple<float[], float[]>>();
         static List<Tuple<float[], float[]>> testData = new List<Tuple<float[], float[]>>();
 
-        public static Func<bool, bool, bool> testFunction { get => Functions.OR; }
+        public static Func<bool, bool, bool> testFunction { get => Functions.AND; }
+
+        private static bool isTrainingEnabled = false;
+        private static bool isManualTestEnabled = false;
 
         static void Main(string[] args)
         {
             Random random = new Random(DateTime.Now.Millisecond);
+            Console.WriteLine("Generating training data..");
             GenerateTrainingData(random);
+            Console.WriteLine("Generating test data..");
             GenerateTestData();
 
+            Console.WriteLine("Creating new network..");
             var nn = new NeuralNetwork(2, 2, 1);
 
-            for (int j = 0; j < 500000; j++)
+            if (isTrainingEnabled)
             {
-                var randomIndex = random.Next(trainingData.Count - 1);
-                nn.Train(trainingData[randomIndex].Item1, trainingData[randomIndex].Item2);
+                Console.WriteLine("Training the network..");
+                for (int j = 0; j < 500000; j++)
+                {
+                    var randomIndex = random.Next(trainingData.Count - 1);
+                    nn.Train(trainingData[randomIndex].Item1, trainingData[randomIndex].Item2);
+                }
             }
 
+            Console.WriteLine("Testing the network..");
             foreach (var data in testData)
             {
                 var inputs = data.Item1;
@@ -47,6 +59,46 @@ namespace Brain
                 Console.WriteLine(targetMatrix - outputMatrix);
                 Console.WriteLine("==============================");
             }
+
+            if (isManualTestEnabled)
+            {
+                Console.WriteLine("Manual testing the network..");
+                while (true)
+                {
+                    try
+                    {
+                        var inputs = Console.ReadLine()
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => Convert.ToSingle(x))
+                            .ToArray();
+                        var targets = Console.ReadLine()
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => Convert.ToSingle(x))
+                            .ToArray();
+                        var outputs = nn.FeedForward(inputs);
+
+                        Console.WriteLine("inputs");
+                        Matrix inputMatrix = new Matrix(inputs);
+                        Console.WriteLine(inputMatrix);
+
+                        Console.WriteLine("outputs");
+                        Matrix outputMatrix = new Matrix(outputs);
+                        Console.WriteLine(outputMatrix);
+
+                        Console.WriteLine("targets");
+                        Matrix targetMatrix = new Matrix(targets);
+                        Console.WriteLine(targetMatrix);
+                        Console.WriteLine("errors");
+                        Console.WriteLine(targetMatrix - outputMatrix);
+                        Console.WriteLine("==============================");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        break;
+                    }
+                }
+            }
         }
 
         private static void GenerateTestData()
@@ -64,7 +116,7 @@ namespace Brain
             bool left;
             bool right;
             bool expectedResult;
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 firstInput = random.Next(0, 10) / 10f;
                 secondInput = random.Next(0, 10) / 10f;

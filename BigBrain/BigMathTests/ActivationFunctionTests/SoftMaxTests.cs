@@ -18,7 +18,7 @@ namespace BigMathTests.ActivationFunctionTests
         public void SoftMax()
         {
             var inputs = new float[] { 2, 1, 0, 1 };
-            var results = ActivationFunctions.SoftMax(inputs);
+            var results = Functions.SoftMax(inputs);
 
             Assert.AreEqual(inputs.Length, results.Length);
             Assert.AreEqual(1, results.Sum());
