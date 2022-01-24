@@ -23,6 +23,7 @@ namespace Brain
         private Matrix biasO;
         private List<Matrix> biasList;
         private List<Matrix> layerList;
+        private List<Layer> layers;
         private float LearningRate = 0.2f;
         private IActivationFunction activationFunction;
 
@@ -34,6 +35,8 @@ namespace Brain
             this.inputsNumber = inputsNumber;
             this.hiddenNumber = hiddenNumber;
             this.outputsNumber = outputsNumber;
+
+            layers = new List<Layer>();
 
             weightsHI = new Matrix(this.hiddenNumber, this.inputsNumber);
             weightsHO1 = new Matrix(this.hiddenNumber, this.hiddenNumber);
@@ -73,10 +76,10 @@ namespace Brain
 
         public float[] FeedForward(float[] input_array)
         {
-            return FeedForwardV2(input_array);
+            return FeedForwardV1(input_array).ToArray();
         }
 
-        private float[] FeedForwardV1(float[] input_array)
+        private Matrix FeedForwardV1(float[] input_array)
         {
             Matrix inputs = new Matrix(input_array);
 
@@ -88,23 +91,35 @@ namespace Brain
             hidden2.Add(biasH2[0, 0]);
             hidden2.Map(activationFunction.Activate);
 
-            Matrix output = this.weightsHO2 * hidden2;
+            Matrix hidden3 = this.weightsHO2 * hidden1;
+            hidden3.Add(biasH3[0, 0]);
+            hidden3.Map(activationFunction.Activate);
+            
+            Matrix output = this.weightsHO3 * hidden3;
             output.Add(biasO[0, 0]);
             output.Map(activationFunction.Activate);
 
-            return output.ToArray();
+            return output;
         }
 
-        private float[] FeedForwardV2(float[] input_array)
+        private Matrix FeedForwardV2(float[] input_array)
         {
+            layers = new List<Layer>();
+
             Matrix inputs = new Matrix(input_array);
+            layers.Add(new Layer() { Values = inputs });
 
-            Matrix hidden1 = FeedForwardLayer(inputs, this.weightList[0], biasList[1][0, 0]);
-            Matrix hidden2 = FeedForwardLayer(hidden1, this.weightList[1], biasList[2][0, 0]);
-            Matrix hidden3 = FeedForwardLayer(hidden2, this.weightList[2], biasList[3][0, 0]);
-            Matrix output = FeedForwardLayer(hidden3, this.weightList[3], biasList[4][0, 0]);
+            for (int i = 0; i < this.weightList.Count; i++)
+            {
+                //var hiddenLayer = FeedForwardLayer(layers[i].Values, this.weightList[i], biasList[i + 1][0, 0]);
+                //layers.Add(new Layer() { Values = hiddenLayer });
 
-            return output.ToArray();
+                var newLayer = new Layer();
+                newLayer.FeedForward(layers[i].Values, this.weightList[i], biasList[i + 1][0, 0], activationFunction);
+                layers.Add(newLayer);
+            }
+
+            return layers[layers.Count - 1].Values;
         }
 
         private Matrix FeedForwardLayer(Matrix inLayer, Matrix inOutWeights, float bias)
@@ -118,7 +133,7 @@ namespace Brain
 
         public void Train(float[] input_array, float[] targets_array)
         {
-            TrainV2(input_array, targets_array);
+            TrainV1(input_array, targets_array);
         }
 
         private void TrainV1(float[] input_array, float[] targets_array)
@@ -133,7 +148,11 @@ namespace Brain
             hidden2.Add(biasH2[0, 0]);
             hidden2.Map(activationFunction.Activate);
 
-            Matrix outputs = this.weightsHO2 * hidden2;
+            Matrix hidden3 = this.weightsHO2 * hidden1;
+            hidden3.Add(biasH3[0, 0]);
+            hidden3.Map(activationFunction.Activate);
+
+            Matrix outputs = this.weightsHO3 * hidden3;
             outputs.Add(biasO[0, 0]);
             outputs.Map(activationFunction.Activate);
 
@@ -198,19 +217,9 @@ namespace Brain
 
         private void TrainV2(float[] input_array, float[] targets_array)
         {
-            Matrix inputs = new Matrix(input_array);
             // training
             Matrix targets = new Matrix(targets_array);
-
-            layerList = new List<Matrix>();
-            layerList.Add(inputs);
-
-            for (int i = 0; i < this.weightList.Count; i++)
-            {
-                layerList.Add(FeedForwardLayer(layerList[i], this.weightList[i], biasList[i + 1][0, 0]));
-            }
-
-            Matrix output = layerList[layerList.Count - 1];
+            Matrix output = FeedForwardV2(input_array);
             Matrix errors = null;
 
             for (int i = this.weightList.Count - 1; i > 0; i--)
@@ -227,8 +236,10 @@ namespace Brain
                     errors = this.weightList[i + 1].Transpose() * errors;
                 }
 
-                Matrix gradient = calculateGradient(layerList[i], errors);
-                Matrix delta = gradient * layerList[i - 1].Transpose();
+
+                Console.WriteLine(string.Join(" ", errors.ToString()));
+                Matrix gradient = calculateGradient(layers[i].Values, errors);
+                Matrix delta = gradient * layers[i - 1].Values.Transpose();
 
                 // adjust H
                 this.weightList[i - 1].Add(delta);

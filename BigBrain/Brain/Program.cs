@@ -11,7 +11,7 @@ namespace Brain
         static List<Tuple<float[], float[]>> trainingData = new List<Tuple<float[], float[]>>();
         static List<Tuple<float[], float[]>> testData = new List<Tuple<float[], float[]>>();
 
-        public static Func<bool, bool, bool> testFunction { get => Functions.OR; }
+        public static Func<bool, bool, bool> testFunction { get => Functions.AND; }
 
         private static bool isTrainingEnabled = true;
         private static bool isManualTestEnabled = false;
@@ -30,7 +30,7 @@ namespace Brain
             if (isTrainingEnabled)
             {
                 Console.WriteLine("Training the network..");
-                for (int j = 0; j < 50000; j++)
+                for (int j = 0; j < 1000000; j++)
                 {
                     var randomIndex = random.Next(trainingData.Count - 1);
                     nn.Train(trainingData[randomIndex].Item1, trainingData[randomIndex].Item2);
@@ -116,7 +116,7 @@ namespace Brain
             bool left;
             bool right;
             bool expectedResult;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 firstInput = random.Next(0, 10) / 10f;
                 secondInput = random.Next(0, 10) / 10f;
